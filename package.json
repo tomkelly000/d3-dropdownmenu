@@ -1,0 +1,23 @@
+{
+	"name" : "d3-dropdownmenu",
+	"version" : "0.0.1",
+	"description" : "Drop down menu for d3",
+	"main" : "d3-dropdownmenu.js",
+	"scripts" : {
+
+	},
+	"keywords" : {
+		"d3",
+		"layout",
+		"menu",
+		"dropdown"
+	},
+	"author" : {
+		"name" : "Tom Kelly",
+		"url" : "http://www.princeton.edu/~tjkelly"
+	},
+	"license" : "MIT",
+	"dependencies" : {
+		"d3" : "3.2.6"
+	}
+}

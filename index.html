@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+	<head>
+		<title>
+			d3.elements
+		</title>
+		<script src = 'http://d3js.org/d3.v3.min.js'></script>
+		<script src = 'd3-dropdownmenu.js'></script>
+	</head>
+	<body>
+		<script>
+			d3.element.dropdownmenu('body').data([
+				{ 'text' : 'Option 1', 'children' : [0]},
+				{ 'text' : 'Option 2', 'children' : [0, 1]},
+				{ 'text' : 'Option 3', 'children' : [0, 1, 2]},
+				{ 'text' : 'Option 4', 'children' : [0, 1, 2, 3]}
+				])
+				.create();
+		</script>
+	</body>
+</html>
