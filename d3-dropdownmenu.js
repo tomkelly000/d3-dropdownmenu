@@ -3,66 +3,192 @@
 /* to include d3.element.dropdownmenu                                */
 /*-------------------------------------------------------------------*/
 
-//(function() { 
+(function() {
+
 d3.element = {}; // initialize the namespace
+var root; // make a closure around root
+
+/*-------------------------------------------------------------------*/
+/* Helper methods                                                    */
+/* Local to this self-calling anonymous function                     */
+/* Don't pollute global namespace                                    */
+/*-------------------------------------------------------------------*/
+function styleUL(ul) {
+	ul
+		.style('position', 'absolute')
+		.style('list-style', 'none')
+		.style('padding', '0')
+		.style('left', '100%')
+		.style('top', '0%')
+		.style('display', 'none')
+}
+function styleLI(li) {
+	li
+		.attr('class', 'd3-dropdownmenu-option')
+		.style('position', 'relative')
+		.style('white-space', 'nowrap')
+}
+function setHandlersForLI(li) {
+	li.each(function() { // need to use DOM elements because d3 overwrites events
+		this
+			.addEventListener('mouseover', function() {
+				d3.select(this).select('ul')
+					.style('display', 'block')
+			})
+		this
+			.addEventListener('mouseout', function() {
+				d3.select(this).select('ul')
+					.style('display', 'none')
+			})
+	})
+}
+/*-------------------------------------------------------------------*/
+function toLink(selection) {
+	console.log('turning to link')
+	console.log(selection)
+	/* tree traversal methods */
+	selection.root = function() {
+		return root;
+	}
+
+	selection.nodes = function() {
+		return this.selectAll('li').each(function() {
+			toNode(d3.select(this))
+		})
+	}
+
+	selection.links = function() {
+		return this.selectAll('ul').each(function() {
+			toLink(d3.select(this))
+		})
+	}
+
+	selection.childNodes = function() {
+		return d3.selectAll(this.childNodes)
+					.each(function() {
+						toNode(d3.select(this))
+					});
+	}
+	selection.firstChildNode = function() {
+		return toNode(d3.select(this.firstChild));
+	}
+	selection.lastChildNode = function() {
+		return toNode(d3.select(this.lastChild));
+	}
+
+	selection.parentNode = function() {
+		return toNode(d3.select(this.parentNode));
+	}
+	/* end of tree traversal methods */
+	/*---------------------------------------------------------------*/
+	selection.horizontal = function() {
+		d3.selectAll(this.node().childNodes)
+			.style('float', 'left')
+			.select('ul') // have to shift child list over
+			.style('left', '0%')
+			.style('top', '100%')
+
+		return toLink(d3.select(this))
+	};
+
+	return selection;
+}
+function toNode(selection) {
+	selection.add = function(data) {
+		var ul = this.select('ul');
+		if (ul.empty()) {
+			ul = this
+					.append('ul')
+					.attr('class', 'd3-dropdownmenu-list')
+					.call(styleUL);
+		}
+
+		// parses tree recursively
+		(function parseTree(selection, tree) {
+
+			for (var attrname in tree) {
+				selection.append('li').datum(attrname)
+					.html(function(d) { return d; })
+					.attr('class', 'd3-dropdownmenu-option')
+					.call(styleLI)
+					.call(setHandlersForLI)
+					// so as not to waste space on null terminators
+					.call(function(selection) {
+						if (tree[attrname]) { 
+							selection.append('ul')
+								.attr('class', 'd3-dropdownmenu-list')
+								.call(styleUL)
+								.call(parseTree, tree[attrname]);
+						}
+					});
+			}
+
+		})(ul, data);
+
+		return this; // for method chaining
+	};
+
+	/* tree traversal methods */
+	selection.root = function() {
+		return root;
+	};
+
+	selection.nodes = function() {
+		return this.selectAll('li').each(function() {
+			toNode(d3.select(this))
+		});
+	};
+
+	selection.links = function() {
+		return this.selectAll('ul').each(function() {
+			toLink(d3.select(this))
+		});
+	};
+
+	selection.childNodes = function() {
+		return d3.selectAll(this.select('ul').node().childNodes)
+					.each(function() {
+						toNode(d3.select(this))
+					});
+	};
+	selection.firstChildNode = function() {
+		console.log('asdf')
+		return toNode(d3.select(this.select('ul').node().firstChild));
+	};
+	selection.lastChildNode = function() {
+		return toNode(d3.select(this.select('ul').node().lastChild));
+	};
+
+	selection.childLink = function() {
+		return toLink(this.select('ul'));
+	};
+
+	selection.parentLink = function() {
+		return toLink(d3.select(this.node().parentNode));
+	};
+
+	selection.nextSiblingNode = function() {
+		return toNode(d3.select(this.node().nextSibling))
+	};
+	selection.previousSiblingNode = function() {
+		return toNode(d3.select(this.node().previousSibling));
+	};
+	selection.prevSiblingNode = selection.previousSiblingNode;
+
+	return selection;
+}
+/*-------------------------------------------------------------------*/
 
 d3.element.dropdownmenu = function(container) { // returns a menu
-	var selection = d3.select(container).append('ul')
-						.attr('class', 'd3-dropdownmenu')
-						.style('list-style', 'none')
-						.style('padding', '0')
-						.style('margin', '0px')
-						.selectAll('li')
+	root = toNode(d3.select(container));
+	root.show = function() {
+		this.select('ul')
+			.style('display', 'block') // make it visible
+			.style('left', 'auto').style('top', 'auto')
 
-	// instance methods make closure around selection
-
-	var data_f = function(data) { // bind the data to the list
-		selection = selection.data(data);
-
-		// the real meat is here,
-		// where styling changes can be made after creation
-		var create_f = function() {
-			selection.enter().append('li')
-				.attr('class', 'd3-dropdownmenu-option')
-				.text(function(d) { return d.text })
-				.style('position', 'relative')
-				.style('float', 'left')
-				.style('padding', '4px 8px')
-				.style('background', '#eee')
-				.style('border', '1px solid #fff')
-				.on('mouseenter', function(d, i) {
-					d3.select(this).select('ul')
-						.style('display', 'block')
-				})
-				.on('mouseleave', function(d, i) {
-					d3.select(this).select('ul')
-						.style('display', 'none')
-				})
-				.append('ul')
-				.style('list-style', 'none')
-				.style('padding', '0')
-				.style('margin', '0px')
-
-				.style('position', 'absolute')
-				.style('left', '0%')
-				.style('top', '100%')
-				.style('display', 'none')
-				.selectAll('li') // for the children
-				.data(function() {
-					return this.parentNode.parentNode.__data__.children;
-				}).enter().append('li')
-				.text(function(d) { return d })
-				//.style('left', '0%')
-				.style('position', 'relative')
-		}
-
-		return {
-			'create' : create_f
-		}
-	};
-	
-	return {
-		'data' : data_f
-	};
+		return this;
+	}
+	return root;
 };
-//})();
+
+})();
