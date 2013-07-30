@@ -108,8 +108,9 @@
 				})
 				.call(function(root) {
 					var option = root.firstChildNode();
-					for ( ; option != null; option = option.firstChildNode()) {
-						option.style('font-style', 'oblique')
+					for (var i = 0; option != null; option = option.firstChildNode()) {
+						option.style('color', '#0' + (i%10) + (i%10));
+						i+=3;
 					}
 				})
 		</script>

@@ -64,14 +64,14 @@ function toLink(selection) {
 					});
 	}
 	selection.firstChildNode = function() {
-		return toNode(d3.select(this.firstChild));
+		return toNode(d3.select(this.node().firstChild));
 	}
 	selection.lastChildNode = function() {
-		return toNode(d3.select(this.lastChild));
+		return toNode(d3.select(this.node().lastChild));
 	}
 
 	selection.parentNode = function() {
-		return toNode(d3.select(this.parentNode));
+		return toNode(d3.select(this.node().parentNode));
 	}
 	/* end of tree traversal methods */
 	/*---------------------------------------------------------------*/
@@ -84,7 +84,6 @@ function toLink(selection) {
 
 		return toLink(d3.select(this))
 	};
-
 	return selection;
 }
 function toNode(selection) {
@@ -165,12 +164,24 @@ function toNode(selection) {
 	};
 
 	selection.childLink = function() {
-		return toLink(this.select('ul'));
+		var ul = this.select('ul');
+		if (ul) {
+			return toLink(ul);
+		} else {
+			return null;
+		}
 	};
 
 	selection.parentLink = function() {
 		return toLink(d3.select(this.node().parentNode));
 	};
+	selection.parentNode = function() {
+		if (this === root) {
+			return null;
+		} else {
+			return toNode(d3.select(this.node().parentNode.parentNode));
+		}
+	}
 
 	selection.nextSiblingNode = function() {
 		return toNode(d3.select(this.node().nextSibling))
