@@ -45,6 +45,7 @@ Some return d3 multiple-selectors for styling and the like
 node.childNodes() // direct children
 node.nodes()
 node.links()
+```
 
 ### Links
 A link is the connection between multiple menu items and their parent node
