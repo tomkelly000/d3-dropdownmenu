@@ -2,7 +2,7 @@
 
 A d3 extension for easily making dropdown menus with d3
 
-See a demo [here](bl.ocks.org/tomkelly000/6110163)
+See a demo [here](http://bl.ocks.org/tomkelly000/6110163)
 
 ## API
 
