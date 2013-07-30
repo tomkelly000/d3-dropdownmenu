@@ -24,28 +24,22 @@ function styleUL(ul) {
 }
 function styleLI(li) {
 	li
-		.attr('class', 'd3-dropdownmenu-option')
 		.style('position', 'relative')
 		.style('white-space', 'nowrap')
 }
 function setHandlersForLI(li) {
-	li.each(function() { // need to use DOM elements because d3 overwrites events
-		this
-			.addEventListener('mouseover', function() {
-				d3.select(this).select('ul')
-					.style('display', 'block')
-			})
-		this
-			.addEventListener('mouseout', function() {
-				d3.select(this).select('ul')
-					.style('display', 'none')
-			})
+	/* namespaced so d3 won't remove them later */
+	li.on('mouseover.d3-dropdownmenu', function() {
+		d3.select(this).select('ul')
+			.style('display', 'block');
+	})
+	li.on('mouseout.d3-dropdownmenu', function() {
+		d3.select(this).select('ul')
+			.style('display', 'none');
 	})
 }
 /*-------------------------------------------------------------------*/
 function toLink(selection) {
-	console.log('turning to link')
-	console.log(selection)
 	/* tree traversal methods */
 	selection.root = function() {
 		return root;
@@ -99,7 +93,6 @@ function toNode(selection) {
 		if (ul.empty()) {
 			ul = this
 					.append('ul')
-					.attr('class', 'd3-dropdownmenu-list')
 					.call(styleUL);
 		}
 
@@ -109,14 +102,12 @@ function toNode(selection) {
 			for (var attrname in tree) {
 				selection.append('li').datum(attrname)
 					.html(function(d) { return d; })
-					.attr('class', 'd3-dropdownmenu-option')
 					.call(styleLI)
 					.call(setHandlersForLI)
 					// so as not to waste space on null terminators
 					.call(function(selection) {
 						if (tree[attrname]) { 
 							selection.append('ul')
-								.attr('class', 'd3-dropdownmenu-list')
 								.call(styleUL)
 								.call(parseTree, tree[attrname]);
 						}
@@ -146,17 +137,31 @@ function toNode(selection) {
 	};
 
 	selection.childNodes = function() {
-		return d3.selectAll(this.select('ul').node().childNodes)
-					.each(function() {
-						toNode(d3.select(this))
-					});
+		var ul = this.select('ul').node();
+		if (ul) {
+			return d3.selectAll(ul.childNodes)
+				.each(function() {
+					toNode(d3.select(this));
+				});
+		} else {
+			return null;
+		}	
 	};
 	selection.firstChildNode = function() {
-		console.log('asdf')
-		return toNode(d3.select(this.select('ul').node().firstChild));
+		var ul = this.select('ul').node();
+		if (ul) {
+			return toNode(d3.select(ul.firstChild));
+		} else {
+			return null;
+		}
 	};
 	selection.lastChildNode = function() {
-		return toNode(d3.select(this.select('ul').node().lastChild));
+		var ul = this.select('ul').node();
+		if (ul) {
+			return toNode(d3.select(ul.lastChild));
+		} else {
+			return null;
+		}
 	};
 
 	selection.childLink = function() {
